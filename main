@@ -1,0 +1,923 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+#include <string.h>
+#include <time.h>
+struct SUser {
+    char Name[50];
+    char Password[50];
+    int AllowBooks;
+    int AllowStudents;
+};
+struct STakenBook {
+    unsigned long long ISBN;
+    char Serial[10];
+    char Date[20];
+};
+struct SBook {
+    unsigned long long ISBN;
+    char Writer[200];
+    char Title[200];
+    int Whole;
+    int Taken;
+};
+struct SStudents {
+    char Serial[10];
+    char SurN[50];
+    char Name[50];
+    char MidlN[50];
+    char FacShort[10];
+    char Fac[200];
+};
+struct SUser* GetUsers(int* Num);
+struct SBook* GetBooks(int* Num);
+struct SStudents* GetStudents(int* Num);
+struct STakenBook* GetTakenBook(int* Num);
+void PutBooks(struct SBook* Books, int Num);
+void PutStudents(struct SStudents* Srudents, int Num);
+void PutTakenBook(struct STakenBook* StudentBooks, int Num);
+void B_add(struct SBook** Books, int* Num);
+void B_delete(struct SBook** Books, int* Num);
+void B_give(struct SBook** Books, int Num);
+void B_back(struct SBook** Books, int Num);
+void B_onhandshow(struct SBook* Books, int Num);
+void S_add(struct SStudents** Students, int* Num);
+void S_delete(struct SStudents** Students, int* Num);
+void S_edit(struct SStudents** Students, int Num);
+void S_lookup(struct SStudents* Students, int Num);
+void S_onhandshow(struct SStudents* Students, int Num);
+int main() {
+    int NumAccounts = 0;
+    struct SUser* Users = GetUsers(&NumAccounts);
+    if (Users == NULL || NumAccounts == 0) { exit(9); }
+    while (1) {
+        printf("Enter Login: ");
+        char Login[200];
+        scanf("%s", Login);
+        printf("Enter Password: ");
+        char Password[200];
+        scanf("%s", Password);
+        int Line = -1;
+        for (int i = 0; i <= NumAccounts; i++) {
+            if (strcmp(Login, Users[i].Name) == 0) {
+                if (strcmp(Password, Users[i].Password) == 0) {
+                    Line = i;
+                }
+                i = NumAccounts;
+            }
+        }
+        if (Line == -1) {
+            printf("Invalid Login or Password\n");
+        }
+        else {
+            if (Users[Line].AllowBooks == 1 && Users[Line].AllowStudents == 1) {
+                while (1) {
+                    printf("1 - Enter Books function\n");
+                    printf("2 - Enter Students function\n");
+                    printf("3 - Leave\n");
+                    printf("Choice: ");
+                    int СhoiceL1;
+                    scanf("%d", &СhoiceL1);
+                    int LeaveLevel2 = 1;
+                    if (СhoiceL1 == 1) {
+                        int NumBooks;
+                        struct SBook* Bokss = GetBooks(&NumBooks);
+                        if (Bokss == NULL || NumBooks == 0) { exit(9); }
+                        while (LeaveLevel2) {
+                            printf("1: add book\n");
+                            printf("2: delete book\n");
+                            printf("3: give book\n");
+                            printf("4: take book\n");
+                            printf("5: show who take book\n");
+                            printf("6: exit\n");
+                            int СhoiceL2;
+                            scanf("%d", &СhoiceL2);
+                            switch (СhoiceL2) {
+                            case 1:
+                                B_add(&Bokss, &NumBooks);
+                                break;
+                            case 2:
+                                B_delete(&Bokss, &NumBooks);
+                                break;
+                            case 3:
+                                B_give(&Bokss, NumBooks);
+                                break;
+                            case 4:
+                                B_back(&Bokss, NumBooks);
+                                break;
+                            case 5:
+                                B_onhandshow(Bokss, NumBooks);
+                                break;
+                            case 6:
+                                PutBooks(Bokss, NumBooks);
+                                LeaveLevel2 = 0;
+                                break;
+                            default:
+                                printf("Unkown command\n");
+                                LeaveLevel2 = 0;
+                                break;
+                            }
+                        }
+                        free(Bokss);
+                    }
+                    else if (СhoiceL1 == 2) {
+                        int NumStudents;
+                        struct SStudents* Studentss = GetStudents(&NumStudents);
+                        if (Studentss == NULL || NumStudents == 0) { exit(9); }
+                        while (LeaveLevel2) {
+                            printf("1: add student\n");
+                            printf("2: delete student\n");
+                            printf("3: edit student\n");
+                            printf("4: show student\n");
+                            printf("5: show student's books\n");
+                            printf("6: exit\n");
+                            int СhoiceL2;
+                            scanf("%d", &СhoiceL2);
+                            switch (СhoiceL2) {
+                            case 1:
+                                S_add(&Studentss, &NumStudents);
+                                break;
+                            case 2:
+                                S_delete(&Studentss, &NumStudents);
+                                break;
+                            case 3:
+                                S_edit(&Studentss, NumStudents);
+                                break;
+                            case 4:
+                                S_lookup(Studentss, NumStudents);
+                                break;
+                            case 5:
+                                S_onhandshow(Studentss, NumStudents);
+                                break;
+                            case 6:
+                                PutStudents(Studentss, NumStudents);
+                                LeaveLevel2 = 0;
+                                break;
+                            default:
+                                printf("Unkown command\n");
+                                break;
+                            }
+                        }
+                        free(Studentss);
+                    }
+                    else if (СhoiceL1 == 3) {
+                        free(Users);
+                        return 0;
+                    }
+                    else {
+                        printf("Enter valid command\n");
+                    }
+                }
+            }
+            else if (Users[Line].AllowBooks == 1) {
+                int NumBooks;
+                struct SBook* Bokss = GetBooks(&NumBooks);
+                if (Bokss == NULL || NumBooks == 0) { exit(9); }
+                while (1) {
+                    printf("1: add book\n");
+                    printf("2: delete book\n");
+                    printf("3: give book\n");
+                    printf("4: take book\n");
+                    printf("5: show who take book\n");
+                    printf("6: exit\n");
+                    int СhoiceL2;
+                    scanf("%d", &СhoiceL2);
+                    switch (СhoiceL2) {
+                    case 1:
+                        B_add(&Bokss, &NumBooks);
+                        break;
+                    case 2:
+                        B_delete(&Bokss, &NumBooks);
+                        break;
+                    case 3:
+                        B_give(&Bokss, NumBooks);
+                        break;
+                    case 4:
+                        B_back(&Bokss, NumBooks);
+                        break;
+                    case 5:
+                        B_onhandshow(Bokss, NumBooks);
+                        break;
+                    case 6:
+                        PutBooks(Bokss, NumBooks);
+                        free(Bokss);
+                        free(Users);
+                        return 0;
+                        break;
+                    default:
+                        printf("Unkown command\n");
+                        break;
+                    }
+                }
+            }
+            else if (Users[Line].AllowStudents == 1) {
+                int NumStudents;
+                struct SStudents* Studentss = GetStudents(&NumStudents);
+                if (Studentss == NULL || NumStudents == 0) { exit(9); }
+                while (1) {
+                    printf("1: add student\n");
+                    printf("2: delete student\n");
+                    printf("3: edit student\n");
+                    printf("4: show student\n");
+                    printf("5: show student's book\n");
+                    printf("6: exit\n");
+                    int СhoiceL2;
+                    scanf("%d", &СhoiceL2);
+                    switch (СhoiceL2) {
+                    case 1:
+                        S_add(&Studentss, &NumStudents);
+                        break;
+                    case 2:
+                        S_delete(&Studentss, &NumStudents);
+                        break;
+                    case 3:
+                        S_edit(&Studentss, NumStudents);
+                        break;
+                    case 4:
+                        S_lookup(Studentss, NumStudents);
+                        break;
+                    case 5:
+                        S_onhandshow(Studentss, NumStudents);
+                        break;
+                    case 6:
+                        PutStudents(Studentss, NumStudents);
+                        free(Studentss);
+                        free(Users);
+                        return 0;
+                        break;
+              
+                    default:
+                        printf("Unkown command\n");
+                        break;
+                    }
+                }
+            }
+            else {
+                printf("This user '%s' have no access\n", Users[Line].Name);
+            }
+        }
+    }
+}
+struct SUser* GetUsers(int* Num) {
+    FILE* fp = fopen("users.csv", "r");
+    if (fp == NULL) {
+        printf("Cannot open file: users.csv;\n");
+        return NULL;
+    }
+    int NumUsers = 0;
+    char ch;
+    int NumSemicolon = 0;
+    while ((ch = fgetc(fp)) != EOF) {
+        if (ch == '\n' && NumSemicolon == 3) {
+            NumUsers++;
+            NumSemicolon = 0;
+        }
+        else if (ch == ';') {
+            NumSemicolon++;
+        }
+        if (NumSemicolon > 3) {
+            printf("NumSemicolon in file more than 3. Syntaxis Error;\n");
+            return NULL;
+        }
+    }
+    *Num = NumUsers;
+    fclose(fp);
+    struct SUser* Users = (struct SUser*) calloc(NumUsers, sizeof(struct SUser));
+    fp = fopen("users.csv", "r");
+    for (int i = 0; i < NumUsers; i++) {
+        char ch;
+        char buffstr[200] = { 0 };
+        int j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr[j++] = ch; }
+        strcat(Users[i].Name, buffstr);
+        char buffstr2[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr2[j++] = ch; }
+        strcat(Users[i].Password, buffstr2);
+        char buffstr3[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr3[j++] = ch; }
+        Users[i].AllowBooks = atoi(buffstr3);
+        char buffstr4[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != '\r' && ch != '\n') { buffstr4[j++] = ch; }
+        Users[i].AllowStudents = atoi(buffstr4);
+        while (ch != '\n') {
+            ch = fgetc(fp);
+        }
+    }
+    fclose(fp);
+    return Users;
+}
+struct SBook* GetBooks(int* Num) {
+    FILE* fp = fopen("books.csv", "r");
+    if (fp == NULL) {
+        printf("Cannot open file: books.csv;\n");
+        return NULL;
+    }
+    int NumBooks = 0;
+    char ch;
+    int NumSemicolon = 0;
+    while ((ch = fgetc(fp)) != EOF) {
+        if (ch == '\n' && NumSemicolon == 4) {
+            NumBooks++;
+            NumSemicolon = 0;
+        }
+        else if (ch == ';') {
+            NumSemicolon++;
+        }
+        if (NumSemicolon > 4) {
+            printf("NumSemicolon in file more than 4. Syntaxis Error;\n");
+            return NULL;
+        }
+    }
+    *Num = NumBooks;
+    fclose(fp);
+    struct SBook* Books = (struct SBook*) calloc(NumBooks, sizeof(struct SBook));
+    fp = fopen("books.csv", "r");
+    for (int i = 0; i < NumBooks; i++) {
+        char ch;
+        char buffstr[200] = { 0 };
+        int j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr[j++] = ch; }
+        Books[i].ISBN = atoll(buffstr);
+        char buffstr2[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr2[j++] = ch; }
+        strcat(Books[i].Writer, buffstr2);
+        char buffstr3[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr3[j++] = ch; }
+        strcat(Books[i].Title, buffstr3);
+        char buffstr4[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr4[j++] = ch; }
+        Books[i].Whole = atoi(buffstr4);
+        char buffstr5[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != '\r' && ch != '\n') { buffstr5[j++] = ch; }
+        Books[i].Taken = atoi(buffstr5);
+        while (ch != '\n') {
+            ch = fgetc(fp);
+        }
+    }
+    fclose(fp);
+    return Books;
+}
+struct SStudents* GetStudents(int* Num) {
+    FILE* fp = fopen("students.csv", "r");
+    if (fp == NULL) {
+        printf("Cannot open file: students.csv;\n");
+        return NULL;
+    }
+    int NumStudents = 0;
+    char ch;
+    int NumSemicolon = 0;
+    while ((ch = fgetc(fp)) != EOF) {
+        if (ch == '\n' && NumSemicolon == 5) {
+            NumStudents++;
+            NumSemicolon = 0;
+        }
+        else if (ch == ';') {
+            NumSemicolon++;
+        }
+        if (NumSemicolon > 5) {
+            printf("NumSemicolon in file more than 5. Syntaxis Error;\n");
+            return NULL;
+        }
+    }
+    *Num = NumStudents;
+    fclose(fp);
+    struct SStudents* Srudents = (struct SStudents*) calloc(NumStudents, sizeof(struct SStudents));
+    fp = fopen("students.csv", "r");
+    for (int i = 0; i < NumStudents; i++) {
+        char ch;
+        char buffstr[200] = { 0 };
+        int j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr[j++] = ch; }
+        strcat(Srudents[i].Serial, buffstr);
+        char buffstr2[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr2[j++] = ch; }
+        strcat(Srudents[i].SurN, buffstr2);
+        char buffstr3[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr3[j++] = ch; }
+        strcat(Srudents[i].Name, buffstr3);
+        char buffstr4[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr4[j++] = ch; }
+        strcat(Srudents[i].MidlN, buffstr4);
+        char buffstr5[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr5[j++] = ch; }
+        strcat(Srudents[i].FacShort, buffstr5);
+        char buffstr6[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != '\r' && ch != '\n') { buffstr6[j++] = ch; }
+        strcat(Srudents[i].Fac, buffstr6);
+        while (ch != '\n') {
+            ch = fgetc(fp);
+        }
+    }
+    fclose(fp);
+    return Srudents;
+}
+struct STakenBook* GetTakenBook(int* Num) {
+    FILE* fp = fopen("student_books.csv", "r");
+    if (fp == NULL) {
+        printf("Cannot open file: student_books.csv;\n");
+        return NULL;
+    }
+    int NumRec = 0;
+    char ch;
+    int NumSemicolon = 0;
+    while ((ch = fgetc(fp)) != EOF) {
+        if (ch == '\n' && NumSemicolon == 2) {
+            NumRec++;
+            NumSemicolon = 0;
+        }
+        else if (ch == ';') {
+            NumSemicolon++;
+        }
+        if (NumSemicolon > 2) {
+            printf("NumSemicolon in file more than 2. Syntaxis Error;\n");
+            return NULL;
+        }
+    }
+    *Num = NumRec;
+    fclose(fp);
+    struct STakenBook* StudentBooks = (struct STakenBook*) calloc(NumRec, sizeof(struct STakenBook));
+    fp = fopen("student_books.csv", "r");
+    for (int i = 0; i < NumRec; i++) {
+        char ch;
+        char buffstr[200] = { 0 };
+        int j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr[j++] = ch; }
+        StudentBooks[i].ISBN = atoll(buffstr);
+        char buffstr2[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != ';') { buffstr2[j++] = ch; }
+        strcat(StudentBooks[i].Serial, buffstr2);
+        char buffstr3[200] = { 0 };
+        j = 0;
+        while ((ch = fgetc(fp)) != '\r' && ch != '\n') { buffstr3[j++] = ch; }
+        strcat(StudentBooks[i].Date, buffstr3);
+        while (ch != '\n') {
+            ch = fgetc(fp);
+        }
+    }
+    fclose(fp);
+    return StudentBooks;
+}
+void PutBooks(struct SBook* Books, int Num) {
+    FILE* fp = fopen("books.csv", "w");
+    if (fp == NULL) {
+        printf("Cannot open file: books.csv;\n");
+        return;
+    }
+    for (int i = 0; i < Num; i++) {
+        fprintf(fp, "%llu;", Books[i].ISBN);
+        fprintf(fp, "%s;", Books[i].Writer);
+        fprintf(fp, "%s;", Books[i].Title);
+        fprintf(fp, "%d;", Books[i].Whole);
+        fprintf(fp, "%d\n", Books[i].Taken);
+    }
+    fclose(fp);
+}
+void PutStudents(struct SStudents* Srudents, int Num) {
+    FILE* fp = fopen("students.csv", "w");
+    if (fp == NULL) {
+        printf("Cannot open file: students.csv;\n");
+        return;
+    }
+    for (int i = 0; i < Num; i++) {
+        fprintf(fp, "%s;", Srudents[i].Serial);
+        fprintf(fp, "%s;", Srudents[i].SurN);
+        fprintf(fp, "%s;", Srudents[i].Name);
+        fprintf(fp, "%s;", Srudents[i].MidlN);
+        fprintf(fp, "%s;", Srudents[i].FacShort);
+        fprintf(fp, "%s\n", Srudents[i].Fac);
+    }
+    fclose(fp);
+}
+void PutTakenBook(struct STakenBook* StudentBooks, int Num) {
+    FILE* fp = fopen("student_books.csv", "w");
+    if (fp == NULL) {
+        printf("Cannot open file: student_books.csv;\n");
+        return;
+    }
+    for (int i = 0; i < Num; i++) {
+        fprintf(fp, "%llu;", StudentBooks[i].ISBN);
+        fprintf(fp, "%s;", StudentBooks[i].Serial);
+        fprintf(fp, "%s\n", StudentBooks[i].Date);
+    }
+    fclose(fp);
+}
+void B_add(struct SBook** Books, int* Num) {
+    struct SBook* OldBooks = *Books;
+    printf("Enter ISBN: ");
+    unsigned long long ISBN;
+    scanf("%lli", &ISBN);
+    for (int i = 0; i < *Num; i++) {
+        if (OldBooks[i].ISBN == ISBN) {
+            printf("Such ISBN is already used\n");
+            return;
+        }
+    }
+    printf("Enter Writer:");
+    char writer[128];
+    scanf("%s", writer);
+    printf("Enter Title:");
+    char title[128];
+    scanf("%s", title);
+    printf("Enter number of books:");
+    int Count;
+    scanf("%d", &Count);
+    struct SBook* NewBooks = (struct SBook*) calloc(*Num + 1, sizeof(struct SBook));
+    for (int i = 0; i < *Num; i++) {
+        NewBooks[i].ISBN = OldBooks[i].ISBN;
+        strcpy(NewBooks[i].Writer, OldBooks[i].Writer);
+        strcpy(NewBooks[i].Title, OldBooks[i].Title);
+        NewBooks[i].Whole = OldBooks[i].Whole;
+        NewBooks[i].Taken = OldBooks[i].Taken;
+    }
+    NewBooks[*Num].ISBN = ISBN;
+    NewBooks[*Num].Whole = Count;
+    NewBooks[*Num].Taken = 0;
+    strcpy(NewBooks[*Num].Writer, writer);
+    strcpy(NewBooks[*Num].Title, title);
+    *Num += 1;
+    *Books = NewBooks;
+    free(OldBooks);
+
+}
+void B_delete(struct SBook** Books, int* Num) {
+    struct SBook* OldBooks = *Books;
+    printf("Enter ISBN: ");
+    long long ISBN;
+    scanf("%lli", &ISBN);
+    int find = -1;
+    for (int i = 0; i < *Num; i++) {
+        if (ISBN == OldBooks[i].ISBN) {
+            find = i;
+        }
+    }
+    if (find == -1) {
+        printf("There is no such book with ISBN: %llu\n", ISBN);
+        return;
+    }
+    int havebooks = 0;
+    if (OldBooks[find].Taken > 0) {
+        havebooks = 1;
+    }
+    int Num2 = 0;
+    struct STakenBook* TakenBooks = GetTakenBook(&Num2);
+    for (int i = 0; i < Num2; i++) {
+        if (TakenBooks[i].ISBN == ISBN) {
+            havebooks = 2;
+        }
+    }
+    if (havebooks != 0) {
+        printf("This book on hands\n");
+        free(TakenBooks);
+        return;
+    }
+    *Num -= 1;
+    struct SBook* NewBooks = (struct SBook*) calloc(*Num - 1, sizeof(struct SBook));
+    for (int i = 0; i < find; i++) {
+        NewBooks[i].ISBN = OldBooks[i].ISBN;
+        strcpy(NewBooks[i].Writer, OldBooks[i].Writer);
+        strcpy(NewBooks[i].Title, OldBooks[i].Title);
+        NewBooks[i].Whole = OldBooks[i].Whole;
+        NewBooks[i].Taken = OldBooks[i].Taken;
+    }
+    for (int i = find; i < *Num; i++) {
+        NewBooks[i].ISBN = OldBooks[i + 1].ISBN;
+        strcpy(NewBooks[i].Writer, OldBooks[i + 1].Writer);
+        strcpy(NewBooks[i].Title, OldBooks[i + 1].Title);
+        NewBooks[i].Whole = OldBooks[i + 1].Whole;
+        NewBooks[i].Taken = OldBooks[i + 1].Taken;
+    }
+    *Books = NewBooks;
+    free(OldBooks);
+    free(TakenBooks);
+}
+void B_give(struct SBook** Books, int Num) {
+    printf("Enter ISBN: ");
+    long long AskISBN;
+    scanf("%lli", &AskISBN);
+    int find = -1;
+    for (int i = 0; i < Num; i++) {
+        if (AskISBN == (*Books)[i].ISBN) {
+            find = i;
+        }
+    }
+    if (find == -1) {
+        printf("There is no such book with ISBN: %llu\n", AskISBN);
+    }
+    else {
+        int Num2 = 0;
+        struct STakenBook* TakenBook = GetTakenBook(&Num2);
+        if ((*Books)[find].Taken == (*Books)[find].Whole) {
+            printf("There are no book avaliable. Next arive will be:\n");
+            for (int i = 0; i < Num2; i++) {
+                if (TakenBook[i].ISBN == AskISBN) {
+                    printf("%s\n", TakenBook[i].Date);
+                }
+            }
+            free(TakenBook);
+        }
+        else {
+            printf("Enter student's serial: ");
+            char AskSerial[10];
+            scanf("%s", AskSerial);
+            printf("Enter book's delivery:\n");
+            int DateDay, DateMonth, DateYear;
+            char AskDate[20] = { 0 };
+            printf("  Day: ");
+            scanf("%d", &DateDay);
+            printf("  Month: ");
+            scanf("%d", &DateMonth);
+            printf("  Year: ");
+            scanf("%d", &DateYear);
+            sprintf(AskDate, "«%02d.%02d.%04d»", DateDay, DateMonth, DateYear);
+            struct STakenBook* NewTakenBook = (struct STakenBook*) calloc(Num2 + 1, sizeof(struct STakenBook));
+            for (int i = 0; i < Num2; i++) {
+                NewTakenBook[i].ISBN = TakenBook[i].ISBN;
+                strcpy(NewTakenBook[i].Serial, TakenBook[i].Serial);
+                strcpy(NewTakenBook[i].Date, TakenBook[i].Date);
+            }
+            NewTakenBook[Num2].ISBN = AskISBN;
+            strcpy(NewTakenBook[Num2].Serial, AskSerial);
+            strcpy(NewTakenBook[Num2].Date, AskDate);
+            Num2++;
+            (*Books)[find].Taken++;
+            PutTakenBook(NewTakenBook, Num2);
+            free(NewTakenBook);
+            free(TakenBook);
+        }
+    }
+}
+void B_back(struct SBook** Books, int Num) {
+    printf("Enter ISBN: ");
+    unsigned long long AskISBN;
+    scanf("%llu", &AskISBN);
+    int find = -1;
+    for (int i = 0; i < Num; i++) {
+        if (AskISBN == (*Books)[i].ISBN) {
+            find = i;
+        }
+    }
+    if (find == -1) {
+        printf("There is no such book with ISBN: %llu\n", AskISBN);
+        return;
+    }
+    if ((*Books)[find].Taken == 0) {
+        printf("Nobody took this book");
+        return;
+    }
+    printf("Enter student's serial: ");
+    char AskSerial[10];
+    scanf("%s", AskSerial);
+    int Num2 = 0;
+    int find2 = -1;
+    struct STakenBook* TakenBook = GetTakenBook(&Num2);
+    struct STakenBook* NewTakenBook = (struct STakenBook*) calloc(Num2 - 1, sizeof(struct STakenBook));
+    for (int i = 0; i < Num2; i++) {
+        if (strcmp(TakenBook[i].Serial, AskSerial) == 0) {
+            find2 = i;
+        }
+        else if (find2 == -1) {
+            NewTakenBook[i].ISBN = TakenBook[i].ISBN;
+            strcpy(NewTakenBook[i].Serial, TakenBook[i].Serial);
+            strcpy(NewTakenBook[i].Date, TakenBook[i].Date);
+        }
+        else {
+            NewTakenBook[i - 1].ISBN = TakenBook[i].ISBN;
+            strcpy(NewTakenBook[i - 1].Serial, TakenBook[i].Serial);
+            strcpy(NewTakenBook[i - 1].Date, TakenBook[i].Date);
+        }
+    }
+    if (find2 != -1) {
+        Num2--;
+    }
+    (*Books)[find].Taken--;
+    PutTakenBook(NewTakenBook, Num2);
+    free(NewTakenBook);
+    free(TakenBook);
+}
+void B_onhandshow(struct SBook* Books, int Num) {
+    printf("Enter ISBN: ");
+    long long AskISBN;
+    scanf("%lli", &AskISBN);
+    int find = -1;
+    for (int i = 0; i < Num; i++) {
+        if (AskISBN == Books[i].ISBN && Books[i].ISBN != 0) {
+            find = i;
+        }
+    }
+    if (find == -1) {
+        printf("There is no such book with ISBN: %llu\n", AskISBN);
+        return;
+    }
+    printf("Book: %s «%s»", Books[find].Writer, Books[find].Title);
+    printf(" (Available: %d/%d)\n", Books[find].Whole - Books[find].Taken, Books[find].Whole);
+    int Num2 = 0;
+    int find2 = -1;
+    struct STakenBook* TakenBook = GetTakenBook(&Num2);
+    int Num3 = 0;
+    struct SStudents* Students = GetStudents(&Num3);
+    for (int i = 0; i < Num2; i++) {
+        if (TakenBook[i].ISBN == AskISBN) {
+            for (int j = 0; j < Num3; j++) {
+                if (strcmp(Students[j].Serial, TakenBook[i].Serial) == 0) {
+                    printf("%s %s %s\n", Students[j].SurN, Students[j].Name, Students[j].MidlN);
+                }
+            }
+            printf("  Return date: %s\n", TakenBook[i].Date);
+            find2 = i;
+        }
+    }
+    if (find2 == -1) {
+        printf("This book is not on hand\n");
+    }
+    free(Students);
+    free(TakenBook);
+}
+void S_add(struct SStudents** Students, int* Num) {
+    struct SStudents* OldStudents = *Students;
+    printf("Enter student's serial: ");
+    char AskSerial[10];
+    scanf("%s", AskSerial);
+    for (int i = 0; i < *Num; i++) {
+        if (strcmp(AskSerial, (*Students)[i].Serial) == 0) {
+            printf("Such serial is already used\n");
+            return;
+        }
+    }
+    printf("Enter surname:");
+    char AskSurN[50];
+    scanf("%s", AskSurN);
+    printf("Enter name:");
+    char AskName[50];
+    scanf("%s", AskName);
+    printf("Enter middle name:");
+    char AskMidlN[50];
+    scanf("%s", AskMidlN);
+    printf("Enter Faculty:");
+    char AskFacShort[10];
+    scanf("%s", AskFacShort);
+    printf("Enter specialization:");
+    char AskFac[200];
+    scanf("%s", AskFac);
+    struct SStudents* NewStudents = (struct SStudents*) calloc(*Num + 1, sizeof(struct SStudents));
+    for (int i = 0; i < *Num; i++) {
+        strcpy(NewStudents[i].Serial, OldStudents[i].Serial);
+        strcpy(NewStudents[i].SurN, OldStudents[i].SurN);
+        strcpy(NewStudents[i].Name, OldStudents[i].Name);
+        strcpy(NewStudents[i].MidlN, OldStudents[i].MidlN);
+        strcpy(NewStudents[i].FacShort, OldStudents[i].FacShort);
+        strcpy(NewStudents[i].Fac, OldStudents[i].Fac);
+    }
+    strcpy(NewStudents[*Num].Serial, AskSerial);
+    strcpy(NewStudents[*Num].SurN, AskSurN);
+    strcpy(NewStudents[*Num].Name, AskName);
+    strcpy(NewStudents[*Num].MidlN, AskMidlN);
+    strcpy(NewStudents[*Num].FacShort, AskFacShort);
+    strcpy(NewStudents[*Num].Fac, AskFac);
+    *Num += 1;
+    *Students = NewStudents;
+    free(OldStudents);
+}
+
+void S_delete(struct SStudents** Students, int* Num) {
+    struct SStudents* OldStudents = *Students;
+    printf("Enter student's serial: ");
+    char AskSerial[10];
+    scanf("%s", AskSerial);
+    int find = -1;
+    for (int i = 0; i < *Num; i++) {
+        if (strcmp(AskSerial, (*Students)[i].Serial) == 0) {
+            find = i;
+        }
+    }
+    if (find == -1) {
+        printf("There is no such student with serial: %s\n", AskSerial);
+    }
+    int Num2;
+    struct STakenBook* TakenBooks = GetTakenBook(&Num2);
+    for (int i = 0; i < Num2; i++) {
+        if (strcmp(TakenBooks[i].Serial, AskSerial) == 0) {
+            printf("This student with books\n");
+            return;
+        }
+    }
+    *Num -= 1;
+    struct SStudents* NewStudents = (struct SStudents*) calloc(*Num - 1, sizeof(struct SStudents));
+    for (int i = 0; i < find; i++) {
+        strcpy(NewStudents[i].Serial, OldStudents[i].Serial);
+        strcpy(NewStudents[i].SurN, OldStudents[i].SurN);
+        strcpy(NewStudents[i].Name, OldStudents[i].Name);
+        strcpy(NewStudents[i].MidlN, OldStudents[i].MidlN);
+        strcpy(NewStudents[i].FacShort, OldStudents[i].FacShort);
+        strcpy(NewStudents[i].Fac, OldStudents[i].Fac);
+
+    }
+    for (int i = find; i < *Num; i++) {
+        strcpy(NewStudents[i].Serial, OldStudents[i + 1].Serial);
+        strcpy(NewStudents[i].SurN, OldStudents[i + 1].SurN);
+        strcpy(NewStudents[i].Name, OldStudents[i + 1].Name);
+        strcpy(NewStudents[i].MidlN, OldStudents[i + 1].MidlN);
+        strcpy(NewStudents[i].FacShort, OldStudents[i + 1].FacShort);
+        strcpy(NewStudents[i].Fac, OldStudents[i + 1].Fac);
+
+    }
+    *Students = NewStudents;
+ //   free(OldStudents);
+}
+void S_edit(struct SStudents** Students, int Num) {
+    printf("Enter student's serial: ");
+    char AskSerial[10];
+    scanf("%s", AskSerial);
+    int find = -1;
+    for (int i = 0; i < Num; i++) {
+        if (strcmp(AskSerial, (*Students)[i].Serial) == 0) {
+            find = i;
+        }
+    }
+    if (find == -1) {
+        printf("There is no such student with serial: %s\n", AskSerial);
+        return;
+    }
+    printf("Enter surname:");
+    char AskSurN[50];
+    scanf("%s", AskSurN);
+    printf("Enter name:");
+    char AskName[50];
+    scanf("%s", AskName);
+    printf("Enter middle name:");
+    char AskMidlN[50];
+    scanf("%s", AskMidlN);
+    printf("Enter Faculty:");
+    char AskFacShort[10];
+    scanf("%s", AskFacShort);
+    printf("Enter specialization:");
+    char AskFac[200];
+    scanf("%s", AskFac);
+    strcpy((*Students)[find].Serial, AskSerial);
+    strcpy((*Students)[find].SurN, AskSurN);
+    strcpy((*Students)[find].Name, AskName);
+    strcpy((*Students)[find].MidlN, AskMidlN);
+    strcpy((*Students)[find].FacShort, AskFacShort);
+    strcpy((*Students)[find].Fac, AskFac);
+}
+void S_lookup(struct SStudents* Students, int Num) {
+    printf("Enter student's serial: ");
+    char AskSerial[10];
+    scanf("%s", AskSerial);
+    for (int i = 0; i < Num; i++) {
+        if (strcmp(AskSerial, Students[i].Serial) == 0) {
+            printf("%s: ", Students[i].Serial);
+            printf("%s %s %s\n", Students[i].SurN, Students[i].Name, Students[i].MidlN);
+            printf("  %s %s\n", Students[i].FacShort, Students[i].Fac);
+            return;
+        }
+    }
+    printf("There is no such student with serial: %s\n", AskSerial);
+}
+void S_onhandshow(struct SStudents* Students, int Num) {
+    printf("Enter student's serial: ");
+    char AskSerial[10];
+    scanf("%s", AskSerial);
+    int find = -1;
+    for (int i = 0; i < Num; i++) {
+        if (strcmp(AskSerial, Students[i].Serial) == 0) {
+            find = i;
+        }
+    }
+    if (find == -1) {
+        printf("There is no such student with serial: %s\n", AskSerial);
+        return;
+    }
+    printf("Student: %s %s %s \n", Students[find].SurN, Students[find].Name, Students[find].MidlN);
+    int Num2;
+    int find2 = -1;
+    struct STakenBook* TakenBook = GetTakenBook(&Num2);
+    int Num3;
+    struct SBook* Books = GetBooks(&Num3);
+    for (int i = 0; i < Num2; i++) {
+        if (strcmp(TakenBook[i].Serial, AskSerial) == 0) {
+            for (int j = 0; j < Num3; j++) {
+                if (Books[j].ISBN == TakenBook[i].ISBN) {
+                    printf("%llu: %s «%s»\n", Books[j].ISBN, Books[j].Writer, Books[j].Title);
+                }
+            }
+            printf("  Return date: %s\n", TakenBook[i].Date);
+            find2 = i;
+        }
+    }
+    if (find2 == -1) {
+        printf("This student with no books on hand\n");
+    }
+}
